@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your WiFi Voucher — Kingsmaly Starlink Network</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="wrap">
+    <header class="brand-header">
+        <img class="brand-logo" src="/static/img/logo.png" alt="Kingsmaly Starlink Network">
+        <h1 class="brand-name">KINGSMALY<span class="accent">STARLINK NETWORK</span></h1>
+    </header>
+
+    <div class="panel">
+        {% if voucher and voucher.status == "disabled" %}
+            <div class="status-icon">&#9888;&#65039;</div>
+            <p style="color: var(--danger); font-weight:600;">This voucher is no longer valid.</p>
+        {% else %}
+            <p class="muted">Your WiFi voucher code</p>
+            <div class="voucher-code" id="voucher">{{ code }}</div>
+
+            <button class="btn btn-primary btn-block" onclick="connectThisDevice({{ code|tojson }})">
+                Connect this device
+            </button>
+            <button class="btn btn-outline" onclick="copyText({{ code|tojson }})">
+                Copy Voucher
+            </button>
+
+            {% if voucher and voucher.expires_at %}
+            <p class="muted" style="margin-top:16px;">Valid until {{ voucher.expires_at.strftime("%d %b %Y, %H:%M") }} UTC</p>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>Questions? <a href="tel:08063392633">08063392633</a></p>
+    </div>
+</div>
+
+{% include "portal/_connect.html" %}
+
+</body>
+</html>

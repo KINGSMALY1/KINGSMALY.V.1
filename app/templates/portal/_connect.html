@@ -1,0 +1,53 @@
+{# Shared "connect this device" helper + QR helpers.
+
+   "Use it on this device" no longer posts to GWN's splash page - it
+   calls our backend, which authorizes the device through GWN.Cloud's
+   official POST /oapi/v1.0.0/portal/pass endpoint. #}
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script>
+const PORTAL_PARAMS = {{ portal_params|tojson }};
+
+async function connectThisDevice(code) {
+    try {
+        const res = await fetch("/api/portal/connect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(Object.assign({ code: code }, PORTAL_PARAMS)),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert("You're connected. Enjoy your internet!");
+            }
+            return;
+        }
+
+        alert(
+            (data.message || "Couldn't connect this device automatically.") +
+            "\n\nVoucher: " + code
+        );
+    } catch (e) {
+        alert(
+            "Couldn't reach the network right now.\n\n" +
+            "Open the WiFi login page and enter this voucher: " + code
+        );
+    }
+}
+
+function renderVoucherQR(canvasId, code) {
+    new QRious({
+        element: document.getElementById(canvasId),
+        value: window.location.origin + "/voucher/" + encodeURIComponent(code),
+        size: 220,
+    });
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text);
+    alert("Voucher copied.");
+}
+</script>

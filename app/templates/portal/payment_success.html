@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Successful — Kingsmaly Starlink Network</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="wrap">
+    <header class="brand-header">
+        <img class="brand-logo" src="/static/img/logo.png" alt="Kingsmaly Starlink Network">
+    </header>
+
+    <div class="panel">
+        <div class="status-icon">&#9989;</div>
+        <h2>Payment Successful</h2>
+        <p class="muted" id="status-message">
+            {% if voucher_code %}
+                Your voucher is ready.
+            {% else %}
+                Finalizing your voucher, please wait a moment...
+            {% endif %}
+        </p>
+
+        <div class="voucher-code" id="voucher">{{ voucher_code or "" }}</div>
+
+        <div id="choice-step" {% if not voucher_code %}style="display:none"{% endif %}>
+            <p class="muted">Who is this voucher for?</p>
+            <button class="btn btn-primary btn-block" onclick="chooseThisDevice()">
+                Use it on this device
+            </button>
+            <button class="btn btn-outline" onclick="chooseSomeoneElse()">
+                It's for someone else
+            </button>
+        </div>
+
+        <div id="share-step" style="display:none">
+            <p class="muted">Let them scan this code, or send them the voucher below.</p>
+            <canvas id="qr" style="margin: 12px auto; display:block;"></canvas>
+            <button class="btn btn-outline btn-block" id="copy-btn" onclick="copyText(document.getElementById('voucher').innerText)">
+                Copy Voucher
+            </button>
+            <button class="btn btn-outline" onclick="backToChoice()">Back</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Questions? <a href="tel:08063392633">08063392633</a></p>
+    </div>
+</div>
+
+{% include "portal/_connect.html" %}
+
+<script>
+const reference = {{ reference|tojson }};
+let voucherReady = {{ (voucher_code is not none)|tojson }};
+
+function currentCode() {
+    return document.getElementById("voucher").innerText.trim();
+}
+
+function chooseThisDevice() {
+    connectThisDevice(currentCode());
+}
+
+function chooseSomeoneElse() {
+    document.getElementById("choice-step").style.display = "none";
+    document.getElementById("share-step").style.display = "block";
+    renderVoucherQR("qr", currentCode());
+}
+
+function backToChoice() {
+    document.getElementById("share-step").style.display = "none";
+    document.getElementById("choice-step").style.display = "block";
+}
+
+if (!voucherReady && reference) {
+    const poll = setInterval(async () => {
+        const res = await fetch(`/api/payment/status/${reference}`);
+        const data = await res.json();
+
+        if (data.voucher_code) {
+            clearInterval(poll);
+            document.getElementById("voucher").innerText = data.voucher_code;
+            document.getElementById("status-message").innerText = "Your voucher is ready.";
+            document.getElementById("choice-step").style.display = "block";
+        } else if (data.status === "failed") {
+            clearInterval(poll);
+            window.location.href = "/payment/failed";
+        }
+    }, 3000);
+}
+</script>
+
+</body>
+</html>

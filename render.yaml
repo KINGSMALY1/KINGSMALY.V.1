@@ -1,0 +1,50 @@
+# Render Blueprint - deploy via "New +" -> "Blueprint" in the Render
+# dashboard, pointing at this repo. This defines the web service and a
+# free PostgreSQL database together, so you don't configure each by hand.
+#
+# Secrets (Paystack, GWN) are intentionally NOT set here (sync: false)
+# so they're never committed to Git - you'll paste them into Render's
+# dashboard after the first deploy.
+
+services:
+  - type: web
+    name: kingsmaly
+    runtime: python
+    plan: free
+    # rootDir must point at the folder containing requirements.txt.
+    # "." = repo root. If you pushed the project inside a subfolder
+    # (e.g. kingsmaly/), change this to that folder name instead.
+    rootDir: .
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:app --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kingsmaly-db
+          property: connectionString
+      - key: APP_BASE_URL
+        sync: false   # set this to your live Render URL after first deploy
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_BASE_URL
+        value: https://api.paystack.co
+      - key: GWN_CLOUD_BASE_URL
+        value: https://www.gwn.cloud
+      - key: GWN_APP_ID
+        sync: false
+      - key: GWN_SECRET_KEY
+        sync: false
+      - key: GWN_NETWORK_ID
+        sync: false
+      - key: GWN_PORTAL_AUTH_URL
+        sync: false   # captive-portal login URL your APs redirect to
+
+databases:
+  - name: kingsmaly-db
+    plan: free

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kingsmaly Starlink Network</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="wrap">
+
+    <header class="brand-header">
+        <img class="brand-logo" src="/static/img/logo.png" alt="Kingsmaly Starlink Network">
+        <h1 class="brand-name">KINGSMALY<span class="accent">STARLINK NETWORK</span></h1>
+        <span class="brand-tagline">Fast &bull; Reliable &bull; Unlimited Internet</span>
+    </header>
+
+    <div class="plans-grid">
+        {% for plan in plans %}
+        <div class="plan-card">
+            <p class="plan-price">&#8358;{{ "{:,.0f}".format(plan.price_naira) }}</p>
+            <p class="plan-name">{{ plan.name }}</p>
+            <button class="btn btn-primary buy-plan" data-plan="{{ plan.id }}">
+                Buy Now
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="features">
+        <div class="feature">
+            <span class="icon">&#128640;</span>
+            <span><strong>High Speed Wi-Fi</strong>for all your needs</span>
+        </div>
+        <div class="feature">
+            <span class="icon">&#128737;</span>
+            <span><strong>Stable Connection</strong>every time</span>
+        </div>
+        <div class="feature">
+            <span class="icon">&#8734;</span>
+            <span><strong>Unlimited Data</strong>no throttling</span>
+        </div>
+        <div class="feature">
+            <span class="icon">&#9889;</span>
+            <span><strong>Powerful Speed</strong>limitless possibilities</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Ramat Shopping Plaza, Maiduguri, Borno State</p>
+        <p>Questions? <a href="tel:08063392633">08063392633</a></p>
+    </div>
+
+</div>
+
+<!-- Email capture modal -->
+<div class="modal-overlay" id="email-modal">
+    <div class="modal-box">
+        <h3>Almost there</h3>
+        <p>Enter your email — your voucher and receipt will be linked to it.</p>
+        <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
+        <div class="modal-error" id="email-error"></div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" id="email-cancel">Cancel</button>
+            <button class="btn btn-primary" id="email-confirm">Continue to Pay</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/payment.js"></script>
+</body>
+</html>
