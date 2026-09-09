@@ -54,7 +54,8 @@ def home():
 def payment_success():
 
     # Paystack appends ?reference=... on redirect back from checkout
-    reference = request.args.get("reference")
+    # Paystack appends ?reference=..., Monnify appends ?paymentReference=...
+    reference = request.args.get("reference") or request.args.get("paymentReference")
 
     voucher_code = None
 
