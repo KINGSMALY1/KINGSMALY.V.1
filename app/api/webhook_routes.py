@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify, current_app
 from app.extensions import db
 from app.models.payment import Payment
 from app.services.paystack_service import PaystackService
+from app.services.monnify_service import MonnifyService
 from app.services.voucher_service import VoucherService
 
 webhook_bp = Blueprint("webhook", __name__)
@@ -58,6 +59,56 @@ def paystack_webhook():
 
     # FIX: goes through VoucherService now, which both calls GWN AND
     # saves the Voucher row locally (previously only the GWN side happened)
+    voucher = VoucherService.create(payment)
+
+    payment.session_created = True
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "voucher": voucher.code
+    }), 200
+
+
+@webhook_bp.route("/monnify", methods=["POST"])
+def monnify_webhook():
+
+    signature = request.headers.get("monnify-signature")
+
+    payload = request.get_data()
+
+    if not signature or not MonnifyService.verify_webhook_signature(payload, signature):
+        return jsonify({"error": "Invalid signature"}), 401
+
+    event = request.get_json()
+
+    if event.get("eventType") != "SUCCESSFUL_TRANSACTION":
+        return jsonify({"message": "Ignored"}), 200
+
+    reference = event["eventData"]["paymentReference"]
+
+    verify = MonnifyService.verify_payment(event["eventData"]["transactionReference"])
+
+    if verify["responseBody"]["paymentStatus"] != "PAID":
+        return jsonify({"error": "Verification failed"}), 400
+
+    payment = Payment.query.filter_by(reference=reference).first()
+
+    if payment is None:
+        return jsonify({"error": "Payment not found"}), 404
+
+    if payment.session_created:
+        return jsonify({"message": "Already processed"}), 200
+
+    payment.status = "success"
+
+    payment.paystack_transaction_id = str(
+        verify["responseBody"]["transactionReference"]
+    )
+
+    payment.paystack_raw_response = verify
+
     voucher = VoucherService.create(payment)
 
     payment.session_created = True
