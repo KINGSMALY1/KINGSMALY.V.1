@@ -26,6 +26,12 @@ class Config:
     PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
     PAYSTACK_BASE_URL = os.environ.get("PAYSTACK_BASE_URL", "https://api.paystack.co")
 
+    # Monnify
+    MONNIFY_API_KEY = os.environ.get("MONNIFY_API_KEY", "")
+    MONNIFY_SECRET_KEY = os.environ.get("MONNIFY_SECRET_KEY", "")
+    MONNIFY_CONTRACT_CODE = os.environ.get("MONNIFY_CONTRACT_CODE", "")
+    MONNIFY_BASE_URL = os.environ.get("MONNIFY_BASE_URL", "https://sandbox.monnify.com")
+
     # Grandstream GWN.Cloud - confirmed working auth: client_credentials grant
     GWN_CLOUD_BASE_URL = os.environ.get("GWN_CLOUD_BASE_URL", "https://www.gwn.cloud")
     GWN_APP_ID = os.environ.get("GWN_APP_ID", "")
