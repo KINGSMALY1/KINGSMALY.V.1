@@ -6,7 +6,7 @@ from app.models.plan import Plan
 from app.models.payment import Payment
 from app.models.user import User
 from app.extensions import db
-from app.services.paystack_service import PaystackService
+from app.services.monnify_service import MonnifyService
 
 payment_bp = Blueprint("payment", __name__)
 
@@ -57,14 +57,20 @@ def initialize():
         "/payment/success"
     )
 
-    result = PaystackService.initialize_payment(
+    result = MonnifyService.initialize_payment(
         email=email,
         amount=float(plan.price_naira),
         reference=reference,
         callback_url=callback_url,
     )
 
-    return jsonify(result)
+    checkout_url = result["responseBody"]["checkoutUrl"]
+
+    return jsonify({
+        "success": True,
+        "checkout_url": checkout_url,
+        "reference": reference,
+    })
 
 
 @payment_bp.route("/status/<reference>")
