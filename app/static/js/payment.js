@@ -57,9 +57,8 @@ confirmBtn.addEventListener("click", async () => {
 
         const data = await response.json();
 
-        // Paystack nests this under data.data.authorization_url
-        if (data && data.data && data.data.authorization_url) {
-            window.location.href = data.data.authorization_url;
+        if (data && data.success && data.checkout_url) {
+            window.location.href = data.checkout_url;
         } else {
             emailError.textContent = data.message || "Something went wrong starting your payment.";
             confirmBtn.disabled = false;
