@@ -5,6 +5,17 @@ from app.extensions import db
 from app.models.plan import Plan
 
 
+def _optional_number(value, cast):
+    """Turn an empty form box into None (no limit), otherwise a number."""
+    value = (value or "").strip()
+    if not value:
+        return None
+    try:
+        return cast(value)
+    except ValueError:
+        return None
+
+
 @admin_bp.route("/plans")
 def plans():
 
@@ -22,6 +33,8 @@ def new_plan():
             description=request.form.get("description", "").strip() or None,
             price_naira=request.form["price_naira"],
             duration_minutes=request.form["duration_minutes"],
+            data_limit_gb=_optional_number(request.form.get("data_limit_gb"), float),
+            speed_limit_mbps=_optional_number(request.form.get("speed_limit_mbps"), int),
             sort_order=request.form.get("sort_order", 0) or 0,
             is_active=True,
         )
@@ -44,6 +57,8 @@ def edit_plan(id):
         plan.description = request.form.get("description", "").strip() or None
         plan.price_naira = request.form["price_naira"]
         plan.duration_minutes = request.form["duration_minutes"]
+        plan.data_limit_gb = _optional_number(request.form.get("data_limit_gb"), float)
+        plan.speed_limit_mbps = _optional_number(request.form.get("speed_limit_mbps"), int)
         plan.sort_order = request.form.get("sort_order", 0) or 0
 
         db.session.commit()
