@@ -6,7 +6,7 @@ from app.models.plan import Plan
 from app.models.payment import Payment
 from app.models.user import User
 from app.extensions import db
-from app.services.monnify_service import MonnifyService
+from app.services.paystack_service import PaystackService
 
 payment_bp = Blueprint("payment", __name__)
 
@@ -29,15 +29,13 @@ def initialize():
             "message": "Email is required."
         }), 400
 
-    # FIX: was hardcoded user_id=1, which always violated the foreign
-    # key constraint since no user with id 1 was ever created (this is
-    # a captive portal - customers don't have accounts/logins). Find
-    # or create a lightweight guest user by email instead.
+    # Captive portal customers don't have accounts: find or create a
+    # lightweight guest user by email.
     user = User.query.filter_by(email=email).first()
     if not user:
         user = User(email=email)
         db.session.add(user)
-        db.session.flush()  # assigns user.id without a separate commit
+        db.session.flush()
 
     reference = f"KSM-{uuid4().hex.upper()}"
 
@@ -57,14 +55,14 @@ def initialize():
         "/payment/success"
     )
 
-    result = MonnifyService.initialize_payment(
+    result = PaystackService.initialize_payment(
         email=email,
         amount=float(plan.price_naira),
         reference=reference,
         callback_url=callback_url,
     )
 
-    checkout_url = result["responseBody"]["checkoutUrl"]
+    checkout_url = result["data"]["authorization_url"]
 
     return jsonify({
         "success": True,
