@@ -15,6 +15,11 @@ class Plan(db.Model):
 
     duration_minutes = db.Column(db.Integer, nullable=False)
 
+    # Optional limits. Empty (None) means no limit.
+    data_limit_gb = db.Column(db.Numeric(8, 2), nullable=True)
+
+    speed_limit_mbps = db.Column(db.Integer, nullable=True)
+
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     sort_order = db.Column(db.Integer, default=0, nullable=False)
