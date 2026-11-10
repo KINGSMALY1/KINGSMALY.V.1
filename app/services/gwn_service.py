@@ -181,7 +181,8 @@ class GWNService:
         """
         Creates exactly ONE voucher (via GWN's "voucher group" endpoint,
         using voucherType=1 to specify our own code as the password,
-        with voucherNum=1) tied to the plan's duration.
+        with voucherNum=1) tied to the plan's duration, data limit and
+        speed limit.
 
         redemption_window_days: how long the voucher stays valid for
         first use after purchase (separate from how long it LASTS once
@@ -194,9 +195,9 @@ class GWNService:
             "networkId": self.network_id,
             "name": payment.reference,
             "vocherNum": 1,          # sic - matches GWN's documented (misspelled) field name
-            "deviceNum": payment.plan.duration_minutes and 1 or 1,
-                       "upRate": int(payment.plan.speed_limit_mbps or 0) * 1000,
-            "downRate": int(payment.plan.speed_limit_mbps or 0) * 1000,
+            "deviceNum": 1,
+            "upRate": int(payment.plan.speed_limit_mbps or 0) * 1024,
+            "downRate": int(payment.plan.speed_limit_mbps or 0) * 1024,
             "usageQuota": int(float(payment.plan.data_limit_gb or 0) * 1024),
             "expiration": redemption_window_days,
             "effectDurationMap": self._duration_breakdown(payment.plan.duration_minutes),
