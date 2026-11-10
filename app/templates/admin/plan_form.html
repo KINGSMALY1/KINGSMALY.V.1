@@ -37,6 +37,23 @@
     <input type="number" min="1" name="duration_minutes" class="form-control" required
            value="{{ plan.duration_minutes if plan else '' }}"
            placeholder="e.g. 60 for 1 hour, 1440 for 1 day">
+    <div class="form-text">15 hours = 900 minutes.</div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Data limit (GB, optional)</label>
+    <input type="number" step="0.01" min="0" name="data_limit_gb" class="form-control"
+           value="{{ '%g'|format(plan.data_limit_gb|float) if plan and plan.data_limit_gb else '' }}"
+           placeholder="e.g. 5">
+    <div class="form-text">Leave empty for no data limit.</div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Speed limit (Mbps, optional)</label>
+    <input type="number" min="1" name="speed_limit_mbps" class="form-control"
+           value="{{ plan.speed_limit_mbps if plan and plan.speed_limit_mbps else '' }}"
+           placeholder="e.g. 5">
+    <div class="form-text">Applies to both download and upload. Leave empty for no speed limit.</div>
 </div>
 
 <div class="mb-3">
