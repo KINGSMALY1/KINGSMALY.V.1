@@ -25,6 +25,8 @@
 <th>Name</th>
 <th>Price</th>
 <th>Duration</th>
+<th>Data</th>
+<th>Speed</th>
 <th>Status</th>
 <th>Order</th>
 <th>Action</th>
@@ -38,7 +40,13 @@
     {% if plan.description %}<br><small class="text-muted">{{ plan.description }}</small>{% endif %}
 </td>
 <td>₦{{ "{:,.2f}".format(plan.price_naira) }}</td>
-<td>{{ plan.duration_minutes }} min</td>
+<td>{{ plan.duration_minutes }} min<br><small class="text-muted">({{ "%g"|format(plan.duration_minutes / 60) }} hrs)</small></td>
+<td>
+    {% if plan.data_limit_gb %}{{ "%g"|format(plan.data_limit_gb|float) }} GB{% else %}<span class="text-muted">No limit</span>{% endif %}
+</td>
+<td>
+    {% if plan.speed_limit_mbps %}{{ plan.speed_limit_mbps }} Mbps{% else %}<span class="text-muted">No limit</span>{% endif %}
+</td>
 <td>
     {% if plan.is_active %}
         <span class="badge bg-success">Active</span>
@@ -57,7 +65,7 @@
 </td>
 </tr>
 {% else %}
-<tr><td colspan="6" class="text-center text-muted">No plans yet - add one to get started.</td></tr>
+<tr><td colspan="8" class="text-center text-muted">No plans yet - add one to get started.</td></tr>
 {% endfor %}
 </tbody>
 </table>
