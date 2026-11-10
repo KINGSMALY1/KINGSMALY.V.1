@@ -195,9 +195,9 @@ class GWNService:
             "name": payment.reference,
             "vocherNum": 1,          # sic - matches GWN's documented (misspelled) field name
             "deviceNum": payment.plan.duration_minutes and 1 or 1,
-            "upRate": 0,
-            "downRate": 0,
-            "usageQuota": 0,
+                       "upRate": int(payment.plan.speed_limit_mbps or 0) * 1000,
+            "downRate": int(payment.plan.speed_limit_mbps or 0) * 1000,
+            "usageQuota": int(float(payment.plan.data_limit_gb or 0) * 1024),
             "expiration": redemption_window_days,
             "effectDurationMap": self._duration_breakdown(payment.plan.duration_minutes),
             "description": f"Kingsmaly - {payment.plan.name}",
