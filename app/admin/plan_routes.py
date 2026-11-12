@@ -81,3 +81,18 @@ def toggle_plan(id):
         "success",
     )
     return redirect(url_for("admin.plans"))
+
+@admin_bp.route("/gwn-check")
+def gwn_check():
+    from flask import jsonify
+    from app.services.gwn_service import GWNService
+
+    gwn = GWNService()
+    body = {
+        "networkId": gwn.network_id,
+        "search": "speedtest",
+        "pageNum": 1,
+        "pageSize": 5,
+    }
+    result = gwn._signed_post("/oapi/v1.0.0/voucher/list", body)
+    return jsonify(result)
