@@ -187,18 +187,23 @@ class GWNService:
         redemption_window_days: how long the voucher stays valid for
         first use after purchase (separate from how long it LASTS once
         activated, which comes from the plan's duration_minutes).
+
+        Limits: speed in Kbps and data in MB, each with a unit field of
+        1. A limit that is not set is left OUT of the request entirely
+        (not sent as 0), matching the request shapes GWN accepted when
+        tested on /admin/gwn-probe.
         """
 
         code = self.generate_code()
+
+        speed_kbps = int(payment.plan.speed_limit_mbps or 0) * 1000
+        quota_mb = int(float(payment.plan.data_limit_gb or 0) * 1024)
 
         body = {
             "networkId": self.network_id,
             "name": payment.reference,
             "vocherNum": 1,          # sic - matches GWN's documented (misspelled) field name
             "deviceNum": 1,
-            "upRate": int(payment.plan.speed_limit_mbps or 0) * 1024,
-            "downRate": int(payment.plan.speed_limit_mbps or 0) * 1024,
-            "usageQuota": int(float(payment.plan.data_limit_gb or 0) * 1024),
             "expiration": redemption_window_days,
             "effectDurationMap": self._duration_breakdown(payment.plan.duration_minutes),
             "description": f"Kingsmaly - {payment.plan.name}",
@@ -207,10 +212,24 @@ class GWNService:
             "passwords": [code],
         }
 
+        if speed_kbps:
+            body["upRate"] = speed_kbps
+            body["upRateUnit"] = 1
+            body["downRate"] = speed_kbps
+            body["downRateUnit"] = 1
+
+        if quota_mb:
+            body["usageQuota"] = quota_mb
+            body["usageUnit"] = 1
+
         result = self._signed_post("/oapi/v1.0.0/voucher/save", body)
 
         if result.get("retCode") != 0:
-            raise RuntimeError(f"GWN voucher creation failed: {result}")
+            raise RuntimeError(
+                f"GWN voucher creation failed: {result} "
+                f"| limits sent: speed_kbps={speed_kbps}, quota_mb={quota_mb}, "
+                f"duration_minutes={payment.plan.duration_minutes}"
+            )
 
         return code
 
