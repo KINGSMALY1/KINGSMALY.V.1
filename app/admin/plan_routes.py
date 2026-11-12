@@ -1,3 +1,6 @@
+import random
+import string
+
 from flask import render_template, request, redirect, url_for, flash
 
 from app.admin import admin_bp
@@ -81,3 +84,76 @@ def toggle_plan(id):
         "success",
     )
     return redirect(url_for("admin.plans"))
+
+
+@admin_bp.route("/gwn-probe")
+def gwn_probe():
+    """
+    TEMPORARY. Tries different speed/data formats against GWN.Cloud and
+    reports which ones it accepts. Every test voucher group that GWN
+    accepts is deleted again straight away. Remove this route when done.
+    """
+    from flask import jsonify
+    from app.services.gwn_service import GWNService
+
+    gwn = GWNService()
+
+    variants = [
+        ("data 5120 unit1", {"usageQuota": 5120, "usageUnit": 1}),
+        ("data 5000 unit1", {"usageQuota": 5000, "usageUnit": 1}),
+        ("data 5 unit2", {"usageQuota": 5, "usageUnit": 2}),
+        ("data 5120 no unit", {"usageQuota": 5120}),
+        ("data 5 unit0", {"usageQuota": 5, "usageUnit": 0}),
+        ("speed 5000 unit1", {"upRate": 5000, "upRateUnit": 1,
+                              "downRate": 5000, "downRateUnit": 1}),
+        ("speed 5 unit2", {"upRate": 5, "upRateUnit": 2,
+                           "downRate": 5, "downRateUnit": 2}),
+        ("speed 5120 unit1", {"upRate": 5120, "upRateUnit": 1,
+                              "downRate": 5120, "downRateUnit": 1}),
+        ("speed 5 unit0", {"upRate": 5, "upRateUnit": 0,
+                           "downRate": 5, "downRateUnit": 0}),
+    ]
+
+    results = []
+
+    for i, (label, extra) in enumerate(variants, start=1):
+        name = f"probe-{i}"
+        code = "PRB" + "".join(random.choice(string.ascii_uppercase) for _ in range(5))
+
+        body = {
+            "networkId": gwn.network_id,
+            "name": name,
+            "vocherNum": 1,
+            "deviceNum": 1,
+            "expiration": 30,
+            "effectDurationMap": GWNService._duration_breakdown(900),
+            "description": "probe - safe to delete",
+            "usageLimitType": 0,
+            "voucherType": 1,
+            "passwords": [code],
+        }
+        body.update(extra)
+
+        entry = {"variant": label, "sent": extra}
+
+        try:
+            result = gwn._signed_post("/oapi/v1.0.0/voucher/save", body)
+            entry["retCode"] = result.get("retCode")
+            entry["msg"] = result.get("msg")
+
+            if result.get("retCode") == 0:
+                try:
+                    group_id = gwn.find_voucher_group_id(name)
+                    if group_id is not None:
+                        gwn.delete_voucher_group(group_id)
+                        entry["cleanup"] = "test voucher group deleted"
+                    else:
+                        entry["cleanup"] = "could not find it to delete - remove 'probe-%d' by hand in GWN.Cloud" % i
+                except Exception as e:
+                    entry["cleanup"] = f"delete failed ({e}) - remove 'probe-{i}' by hand in GWN.Cloud"
+        except Exception as e:
+            entry["error"] = str(e)
+
+        results.append(entry)
+
+    return jsonify(results)
