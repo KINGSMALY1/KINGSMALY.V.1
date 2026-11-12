@@ -89,10 +89,37 @@ def gwn_check():
     from app.services.gwn_service import GWNService
 
     gwn = GWNService()
-    body = {
-        "networkId": gwn.network_id,
-        "pageNum": 1,
-        "pageSize": 100,
-    }
-    result = gwn._signed_post("/oapi/v1.0.0/voucher/list", body)
-    return jsonify(result)
+    out = {"network_id_used_by_app": str(gwn.network_id)}
+
+    def attempt(label, func):
+        try:
+            out[label] = func()
+        except Exception as e:
+            out[label] = f"error: {e}"
+
+    attempt(
+        "vouchers_network_id_as_text",
+        lambda: gwn._signed_post(
+            "/oapi/v1.0.0/voucher/list",
+            {"networkId": str(gwn.network_id), "pageNum": 1, "pageSize": 100},
+        ),
+    )
+
+    if str(gwn.network_id).isdigit():
+        attempt(
+            "vouchers_network_id_as_number",
+            lambda: gwn._signed_post(
+                "/oapi/v1.0.0/voucher/list",
+                {"networkId": int(gwn.network_id), "pageNum": 1, "pageSize": 100},
+            ),
+        )
+
+    attempt(
+        "networks",
+        lambda: gwn._signed_get(
+            "/oapi/v1.0.0/network/list",
+            {"pageNum": 1, "pageSize": 20},
+        ),
+    )
+
+    return jsonify(out)
